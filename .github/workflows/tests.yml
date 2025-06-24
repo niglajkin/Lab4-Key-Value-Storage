@@ -13,24 +13,45 @@ jobs:
         dotnet-version: ['8.0.x']
 
     steps:
-      # 1. Checkout source
-      - uses: actions/checkout@v4
+    # ------------------------------------------------------------------
+    # 1.  Checkout repository
+    # ------------------------------------------------------------------
+    - name: Checkout source
+      uses: actions/checkout@v4
 
-      # 2. Set up the required .NET SDK
-      - name: Setup .NET ${{ matrix.dotnet-version }}
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: ${{ matrix.dotnet-version }}
+    # ------------------------------------------------------------------
+    # 2.  .NET build-and-test pipeline
+    # ------------------------------------------------------------------
+    - name: Set up .NET ${{ matrix.dotnet-version }}
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ matrix.dotnet-version }}
 
-      # 3. Restore all dependencies (solution-wide)
-      - name: Restore dependencies
-        run: dotnet restore
+    - name: Restore .NET dependencies
+      run: dotnet restore
 
-      # 4. Build everything once (Release config)
-      - name: Build solution
-        run: dotnet build --configuration Release --no-restore
+    - name: Build solution (Release)
+      run: dotnet build --configuration Release --no-restore
 
-      # 5. Run **all** tests in Server.Tests (StoreTests + ControllerTests)
-      #    Remove --filter if you ever add more test projects and want to run them too.
-      - name: Run C# test suite
-        run: dotnet test Server.Tests/Server.Tests.csproj --configuration Release --no-build --verbosity minimal
+    - name: Run all C# tests
+      run: |
+        dotnet test Server.Tests/Server.Tests.csproj \
+                   --configuration Release \
+                   --no-build \
+                   --verbosity minimal
+
+    # ------------------------------------------------------------------
+    # 3.  Python client test pipeline
+    # ------------------------------------------------------------------
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Install client dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r Client/requirements.txt
+
+    - name: Run Python tests
+      run: pytest -q Client
