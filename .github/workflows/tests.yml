@@ -1,33 +1,36 @@
-name: ci-tests
+name: Store-layer tests
 
 on:
   push:
   pull_request:
 
 jobs:
-  store-tests-only:
+  store-tests:
     runs-on: ubuntu-latest
 
     strategy:
       matrix:
-        dotnet-version: ['8.0.x']
+        dotnet-version: ['8.0.x']   
 
     steps:
-      - uses: actions/checkout@v4
+    - name: Checkout repo
+      uses: actions/checkout@v4
 
-      # ---------- .NET ----------
-      - name: Install .NET ${{ matrix.dotnet-version }}
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: ${{ matrix.dotnet-version }}
+    - name: Setup .NET ${{ matrix.dotnet-version }}
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ matrix.dotnet-version }}
 
-      - name: Restore dependencies
-        run: dotnet restore
+    - name: Restore dependencies
+      run: dotnet restore
 
-      - name: Run StoreTests only
-        run: |
-          dotnet test Server.Tests \
-              --configuration Release \
-              --no-build \
-              --verbosity minimal \
-              --filter "FullyQualifiedName~StoreTests"
+    - name: Build test project
+      run: dotnet build Server.Tests/Server.Tests.csproj --configuration Release --no-restore
+
+    - name: Run StoreTests
+      run: |
+        dotnet test Server.Tests/Server.Tests.csproj \
+          --configuration Release \
+          --no-restore \
+          --verbosity normal \
+          --filter 'FullyQualifiedName~StoreTests'
