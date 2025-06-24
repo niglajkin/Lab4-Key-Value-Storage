@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+.venv/
+pytest_cache/
+
+.vs/
+bin/
+obj/
+*.user
+*.suo
+
+.DS_Store
+
+*.log
